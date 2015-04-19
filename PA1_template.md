@@ -54,7 +54,8 @@ The step to prepare the data:
 
 
 
-```{r prepData}
+
+```r
 #  Prepare Data
 # Load libraries - plyr to process the data and lattice to plot results
 library(plyr)
@@ -68,7 +69,6 @@ library(lattice)
 unzip("activity.zip")
 activity <- read.csv("activity.csv")
 activity$date <- as.Date(activity$date)
-
 ```
  
 
@@ -84,17 +84,25 @@ The initial review of the activite data is to
 Missing values in the 'steps" are ignored.
 
 ### Histogram of total steps taken each day
-```{r meansteps,echo=TRUE }
+
+```r
 #  compute total step for each day - ignore missing values (NA)
 sumByDay <- ddply(activity, .(date), summarize, steps = sum(steps,na.rm = TRUE))
 histogram(~ steps, data = sumByDay, main="Total Step Each Day", xlab="Steps", col="blue")
 ```
 
+![plot of chunk meansteps](figure/meansteps-1.png) 
+
 ### Mean and median of steps taken each day
-```{r mean,echo=TRUE}
+
+```r
 dayMean <- round(mean(sumByDay$steps))
 dayMedian <- median(sumByDay$steps)
 print(paste("Steps per Day - Mean ", as.character(dayMean), " - Median ", as.character(dayMedian)))
+```
+
+```
+## [1] "Steps per Day - Mean  9354  - Median  10395"
 ```
 
 
@@ -107,18 +115,26 @@ Charaterize the daily activity pattern by:
 
 ### Plot of Average Steps vs Interval
 
-```{r activity,echo=TRUE}
+
+```r
 intervals <- ddply(activity, .(interval),   summarize,  mean = round(mean(steps,na.rm = TRUE)))
 xyplot(mean~interval, data=intervals, t="l", 
        main="Mean Steps per Interval", xlab="5 Minute Interval", ylab="Mean Steps")
 ```
 
+![plot of chunk activity](figure/activity-1.png) 
+
 ### 5 Minute Interval with Maximum Mean Steps 
 
-```{r maxs,echo=TRUE}
+
+```r
 print(paste("Interval ",
             as.character(intervals$interval[which.max(intervals$mean)]),
             " with value of  ",as.character(max(intervals$mean))))
+```
+
+```
+## [1] "Interval  835  with value of   206"
 ```
 
 
@@ -138,14 +154,20 @@ The "step" data has missing values that are indicated as "NA" in the data.  Deal
 
 First create a vector to identify the intervals with NA values and count the number of NA.
 
-```{r countNAs,echo=TRUE}
+
+```r
 #  Count na values
 naS <- is.na(activity$steps)
 numNas <- sum(naS)
 print(paste("Number of rows with steps = NA is ",as.character(numNas)))
 ```
+
+```
+## [1] "Number of rows with steps = NA is  2304"
+```
 Replace the NA values with the mean value of steps for that time interval.
-```{r replaceNA,echo=TRUE}
+
+```r
 newActivity <- activity  #  create a new data frame to hold data with NA replaced
 #  Create vector of 5 minute internal means covering all days
 allMeans <- rep(intervals$mean, length(unique(activity$date)))
@@ -153,11 +175,14 @@ allMeans <- rep(intervals$mean, length(unique(activity$date)))
 newActivity$steps[naS] <- allMeans[naS]
 ```
 Create a new steps take in a day and plot the result.
-```{r echo=TRUE}
+
+```r
 # Create a new Total Steps by Day without na
 newSumByDay <- ddply(newActivity, .(date), summarise, steps = sum(steps))
 histogram(~ steps, data = newSumByDay, main="Total Step Each Day", xlab="Steps", col="purple")
 ```
+
+![plot of chunk unnamed-chunk-1](figure/unnamed-chunk-1-1.png) 
 
 
 
@@ -169,7 +194,8 @@ Determining if there are differences in activity patterns involves the following
 
 2. Make a panel plot containing a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis).
 
-```{r weekend,echo=TRUE}
+
+```r
 #  Get day of the week for each date
 dayOfWeek <- weekdays(newActivity$date)
 #  Create a vector of "weekday"
@@ -191,5 +217,6 @@ meanIntervals <- ddply(newActivity, .(interval,dayType),   summarize,
 #  Plot the results Mean Steps vs Interval for weekends and weekdays
 xyplot(meanSteps~interval|dayType, data=meanIntervals, t="l", 
        main="Weekend vs Weekday Steps",xlab="5 Minute Interval", ylab="Mean Steps", layout=c(1,2))
-
 ```
+
+![plot of chunk weekend](figure/weekend-1.png) 
